@@ -31,5 +31,5 @@ RUN \
     /var/tmp/*
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["tunnel", "--config", "/etc/cloudflared/derived-config.yml", "run"]
+CMD ["tunnel", "--config", "/etc/cloudflared/runtime-config.yml", "run"]
 
