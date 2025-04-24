@@ -16,7 +16,7 @@ RUN \
   echo "**** install cloudflared ****" && \
   apt install -y curl && \
   cd /tmp/ && \
-  curl --location -o cloudflared-linux-amd64.deb 'https://github.com/cloudflare/cloudflared/releases/download/${CF_CLOUDFLARED_VERSION}/cloudflared-linux-amd64.deb' && \
+  curl --location -o cloudflared-linux-amd64.deb "https://github.com/cloudflare/cloudflared/releases/download/${CF_CLOUDFLARED_VERSION}/cloudflared-linux-amd64.deb" && \
   dpkg -i cloudflared-linux-amd64.deb && \
   echo "**** install jq ***" && \
   apt install -y jq && \
