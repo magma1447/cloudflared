@@ -1,4 +1,21 @@
 #!/bin/sh
+
+# Check required environment variables
+if [ -z "${CF_TUNNEL_ID}" ]; then
+  echo "ERROR: CF_TUNNEL_ID environment variable is not set"
+  exit 1
+fi
+
+if [ -z "${CF_TUNNEL_ACCOUNT_TAG}" ]; then
+  echo "ERROR: CF_TUNNEL_ACCOUNT_TAG environment variable is not set"
+  exit 1
+fi
+
+if [ -z "${CF_TUNNEL_SECRET}" ]; then
+  echo "ERROR: CF_TUNNEL_SECRET environment variable is not set"
+  exit 1
+fi
+
 # Create credentials.json at runtime
 jq -cn --arg AccountTag "${CF_TUNNEL_ACCOUNT_TAG}" \
        --arg TunnelSecret "${CF_TUNNEL_SECRET}" \
