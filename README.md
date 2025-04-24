@@ -4,7 +4,9 @@ A customized Cloudflare Tunnel container that supports environment variables for
 
 ## Overview
 
-This container helps you run cloudflared tunnels while keeping sensitive credentials out of your codebase. It generates the required `credentials.json` file at runtime using environment variables.
+This container helps you run locally created cloudflared tunnels while keeping sensitive credentials out of your codebase. It generates the required `credentials.json` file at runtime using environment variables.
+
+The official docker image only allows to pass `TUNNEL_TOKEN`, which is used by managed tunnels created in the web-ui. I didn't appreciate having to manage the ingress configuration in Cloudflare's web-ui since I believe it belongs in git together with the docker compose project. This is a solution I can appreciate.
 
 ## Usage
 
