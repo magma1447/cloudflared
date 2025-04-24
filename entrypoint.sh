@@ -7,8 +7,11 @@ jq -cn --arg AccountTag "${CF_TUNNEL_ACCOUNT_TAG}" \
 
 # Always create a runtime config based on the available config
 cp /etc/cloudflared/config.yml /etc/cloudflared/runtime-config.yml
+
 # Update the tunnel ID in our runtime copy
 sed -i "/^tunnel:/c\tunnel: ${CF_TUNNEL_ID}" /etc/cloudflared/runtime-config.yml
+# Ensure the credentials file path is correct
+sed -i "/^credentials-file:/c\credentials-file: /etc/cloudflared/credentials.json" /etc/cloudflared/runtime-config.yml
 
 # Check if we're using the example configuration and warn the user
 if grep -q "hostname: \"example.com\"" /etc/cloudflared/runtime-config.yml; then
