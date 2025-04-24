@@ -1,0 +1,10 @@
+tunnel:
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # Replace with your own ingress rules
+  - hostname: "example.com"
+    service: "http://nginx:80"
+
+  - service: http_status:404
+
