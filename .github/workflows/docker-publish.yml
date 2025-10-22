@@ -6,9 +6,51 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 3 * * 1'  # Weekly check on Mondays at 3 AM UTC
+  workflow_dispatch:      # Allow manual triggers
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_build: ${{ steps.compare.outputs.needs_build }}
+      latest_version: ${{ steps.latest.outputs.version }}
+    steps:
+      - name: Get latest cloudflared version
+        id: latest
+        run: |
+          LATEST=$(curl -sL https://api.github.com/repos/cloudflare/cloudflared/releases/latest | jq -r '.tag_name')
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest cloudflared release: $LATEST"
+ 
+      - name: Get current image version
+        id: current
+        run: |
+          # Try to get version from existing image
+          docker pull ghcr.io/${{ github.repository }}:main 2>/dev/null || echo "No existing image found"
+          CURRENT=$(docker run --rm ghcr.io/${{ github.repository }}:main cloudflared --version 2>/dev/null | grep -oP 'cloudflared version \K[^ ]+' || echo "none")
+          echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Current image version: $CURRENT"
+ 
+      - name: Compare versions
+        id: compare
+        run: |
+          # Always build on push/PR
+          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+            echo "Building due to ${{ github.event_name }} event"
+          elif [ "${{ steps.latest.outputs.version }}" != "${{ steps.current.outputs.version }}" ]; then
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+            echo "New version available: ${{ steps.latest.outputs.version }} (current: ${{ steps.current.outputs.version }})"
+          else
+            echo "needs_build=false" >> $GITHUB_OUTPUT
+            echo "Already up to date with version ${{ steps.current.outputs.version }}"
+          fi
+
   build-and-push:
+    needs: check-version
+    if: needs.check-version.outputs.needs_build == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,4 +88,12 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ needs.check-version.outputs.latest_version }}
+          build-args: |
+            CF_CLOUDFLARED_VERSION=${{ needs.check-version.outputs.latest_version }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+ 
+      - name: Image digest
+        run: echo "Built image with cloudflared ${{ needs.check-version.outputs.latest_version }}"
 
